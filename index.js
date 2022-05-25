@@ -1,6 +1,6 @@
 const express = require('express')
 const app = express()
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion ,ObjectId } = require('mongodb');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
@@ -21,6 +21,7 @@ async function run(){
   try{
      await client.connect();
      const servicesCollection = client.db('bicycl_plus').collection('services')
+    
 
      app.get('/services', async(req,res) =>{
       const query={};
@@ -31,8 +32,8 @@ async function run(){
      app.get("/services/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
-      const product = await productsCollection.findOne(query);
-      res.send(product);
+      const part = await servicesCollection.findOne(query);
+      res.send(part);
     });
   }
   finally{}
