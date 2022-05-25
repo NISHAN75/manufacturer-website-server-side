@@ -21,6 +21,7 @@ async function run(){
   try{
      await client.connect();
      const servicesCollection = client.db('bicycl_plus').collection('services')
+     const ordersCollection = client.db('bicycl_plus').collection('orders')
     
 
      app.get('/services', async(req,res) =>{
@@ -35,6 +36,17 @@ async function run(){
       const part = await servicesCollection.findOne(query);
       res.send(part);
     });
+    // post working
+    app.post('/orders', async(req,res) =>{
+      const orders=req.body;
+      const query ={partName: orders.partName, partId: orders.partId}
+      const exists= ordersCollection.findOne(query);
+      if(exists){
+           return res.send({success: false, orders: exists})
+      }
+      const result= await  ordersCollection.insertOne(orders);
+      res.send({success: true, result})
+    })
   }
   finally{}
 }
