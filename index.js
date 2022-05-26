@@ -22,6 +22,7 @@ async function run(){
      await client.connect();
      const servicesCollection = client.db('bicycl_plus').collection('services')
      const ordersCollection = client.db('bicycl_plus').collection('orders')
+     const usersCollection = client.db('bicycl_plus').collection('user')
     
 
      app.get('/services', async(req,res) =>{
@@ -36,11 +37,27 @@ async function run(){
       const part = await servicesCollection.findOne(query);
       res.send(part);
     });
+    app.put('/user/:email', async(req,res) =>{
+      const email = req.params.email;
+      const user=req.body
+      const filter={email:email};
+      const options = { upsert: true };
+      const updateDoc = {
+        $set:user,
+      };
+    })
+    app.get('/orders', async(req,res) =>{
+      const email=req.query.email;
+      const query ={userEmail:email};
+      const orders=await ordersCollection.find(query).toArray();
+      res.send(orders);
+      console.log(orders,query);
+    });
   
     // post working
     app.post('/orders' , async(req,res) =>{
       const orders= req.body;
-      const query = {partName:orders.partName};
+      const query = {partName:orders.partName,userEmail:orders.userEmail};
       const exists= await ordersCollection.findOne(query)
       if(exists){
         return res.send({success: false , orders: exists})
@@ -50,12 +67,7 @@ async function run(){
       res.send({success: true , result});
     });
 
-    app.get('/orders', async(req,res) =>{
-      const email=req.query.userEmail;
-      const query ={email:email};
-      const orders=await ordersCollection.find(query).toArray();
-      res.send(orders);
-    })
+    
   }
   finally{}
 }
