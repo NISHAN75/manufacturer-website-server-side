@@ -36,6 +36,7 @@ async function run(){
       const part = await servicesCollection.findOne(query);
       res.send(part);
     });
+  
     // post working
     app.post('/orders' , async(req,res) =>{
       const orders= req.body;
@@ -47,6 +48,13 @@ async function run(){
     
       const result = await ordersCollection.insertOne(orders);
       res.send({success: true , result});
+    });
+
+    app.get('/orders', async(req,res) =>{
+      const email=req.query.userEmail;
+      const query ={email:email};
+      const orders=await ordersCollection.find(query).toArray();
+      res.send(orders);
     })
   }
   finally{}
