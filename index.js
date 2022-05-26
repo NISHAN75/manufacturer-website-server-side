@@ -37,15 +37,16 @@ async function run(){
       res.send(part);
     });
     // post working
-    app.post('/orders', async(req,res) =>{
-      const orders=req.body;
-      const query ={partName: orders.partName, partId: orders.partId}
-      const exists= ordersCollection.findOne(query);
+    app.post('/orders' , async(req,res) =>{
+      const orders= req.body;
+      const query = {partName:orders.partName};
+      const exists= await ordersCollection.findOne(query)
       if(exists){
-           return res.send({success: false, orders: exists})
+        return res.send({success: false , orders: exists})
       }
-      const result= await  ordersCollection.insertOne(orders);
-      res.send({success: true, result})
+    
+      const result = await ordersCollection.insertOne(orders);
+      res.send({success: true , result});
     })
   }
   finally{}
