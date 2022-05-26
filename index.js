@@ -3,6 +3,7 @@ const app = express()
 const { MongoClient, ServerApiVersion ,ObjectId } = require('mongodb');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+const { reset } = require('nodemon');
 require('dotenv').config();
 
 const port = process.env.PORT || 5000;
@@ -53,6 +54,7 @@ async function run(){
       const part = await servicesCollection.findOne(query);
       res.send(part);
     });
+    // put working
     app.put('/user/:email', async(req,res) =>{
       const email = req.params.email;
       const user=req.body
@@ -65,13 +67,33 @@ async function run(){
       const token=jwt.sign({email:email}, process.env.ACCESS_TOKEN_SECRET,{ expiresIn: '1h'} )
       res.send({result, accessToken: token});
     })
-    app.get('/orders', async(req,res) =>{
+    app.get('/orders', verifyJWT, async(req,res) =>{
       const email=req.query.email;
-      const query ={userEmail:email};
+      const decodeEmail=req.decoded.email
+      if(email === decodeEmail){
+        const query ={userEmail:email};
       const orders=await ordersCollection.find(query).toArray();
       res.send(orders);
-      console.log(orders,query);
+      }
+      else{
+        return res.status(403).send({message: 'Forbidden access'})
+      }
+      
     });
+    app.get('/user',verifyJWT, async(req,res)=>{
+      const users = await usersCollection.find().toArray();
+      res.send(users)
+    });
+    // put working
+    app.put('/user/admin/:email', async(req,res) =>{
+      const email = req.params.email;
+      const filter={email:email};
+      const updateDoc = {
+        $set:{role:'admin'},
+      };
+      const result = await usersCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    })
   
     // post working
     app.post('/orders' , async(req,res) =>{
