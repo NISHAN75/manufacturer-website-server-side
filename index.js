@@ -45,6 +45,8 @@ async function run() {
     const ordersCollection = client.db("bicycl_plus").collection("orders");
     const usersCollection = client.db("bicycl_plus").collection("user");
     const paymentCollection = client.db("bicycl_plus").collection("payment");
+    const reviewsCollection = client.db("bicycl_plus").collection("reviews");
+    const profileCollection = client.db("bicycl_plus").collection("profile");
 
     app.get("/services", async (req, res) => {
       const query = {};
@@ -110,6 +112,7 @@ async function run() {
       
     });
     
+    
     app.delete('/orders',verifyJWT, async(req,res)=>{
       const email = req.query.email;
       console.log(email);
@@ -122,6 +125,21 @@ async function run() {
       const users = await usersCollection.find().toArray();
       res.send(users);
     });
+    app.patch('/orders/:id', verifyJWT,async(req,res)=>{
+      const id = req.params.id;
+      const payment=req.body;
+      const filter={_id: ObjectId(id)};
+      const updateDoc={
+        $set:{
+          paid: true,
+          transactionId: payment.transactionId,
+        }
+      }
+
+      const updatedOrders= await ordersCollection.updateOne(filter,updateDoc);
+      const result= await paymentCollection.insertOne(payment);
+      res.send(updateDoc); 
+    })
     app.patch('/orders/:id', verifyJWT,async(req,res)=>{
       const id = req.params.id;
       const payment=req.body;
@@ -182,6 +200,16 @@ async function run() {
       }
       const result = await ordersCollection.insertOne(orders);
       res.send({ success: true, result });
+    });
+    app.post("/reviews", async (req, res) => {
+      const reviews = req.body;
+      const result = await reviewsCollection.insertOne(reviews);
+      res.send(result);
+    });
+    app.post('/profile', async(req,res)=>{
+      const profile=req.body;
+      const result = await profileCollection.insertOne(profile);
+      res.send(result);
     });
 
     
