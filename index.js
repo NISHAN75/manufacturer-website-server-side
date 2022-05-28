@@ -3,6 +3,7 @@ const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
+const stripe  = require('stripe')('sk_test_51L3xaWGYUGMAfkTXq1YHfjwX6y8hpRE7b87vEuR7HLmK0420IXFOq2lckqhsnxgWS1jwTBk1TDBDR5Y9PfLnxlbe00i1OELZNj');
 const { reset } = require("nodemon");
 require("dotenv").config();
 
@@ -90,9 +91,23 @@ async function run() {
     app.get('/orders/:id', verifyJWT, async(req,res)=>{
       const id = req.params.id;
       const query= {_id: ObjectId(id)};
-      const orders = ordersCollection.findOne(query);
-      res.send(orders)
-    })
+      const orders = await ordersCollection.findOne(query);
+      res.send(orders);
+    });
+    app.post('/create-payment-intent', verifyJWT, async(req,res)=>{
+      const order=req.body;
+      console.log(order);
+      const amount=order.pay*100;
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount:amount,
+        currency:'usd',
+       payment_method_types:['card']
+      })
+      res.send({clientSecret: paymentIntent.client_secret})
+      console.log(order);
+      
+    });
+    
     app.delete('/orders',verifyJWT, async(req,res)=>{
       const email = req.query.email;
       console.log(email);
@@ -100,6 +115,7 @@ async function run() {
       const result = await ordersCollection.deleteOne(filter);
       res.send(result)
     });
+
     app.get("/user", verifyJWT, async (req, res) => {
       const users = await usersCollection.find().toArray();
       res.send(users);
