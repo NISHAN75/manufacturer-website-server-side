@@ -3,9 +3,10 @@ const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
-const stripe  = require('stripe')('sk_test_51L3xaWGYUGMAfkTXq1YHfjwX6y8hpRE7b87vEuR7HLmK0420IXFOq2lckqhsnxgWS1jwTBk1TDBDR5Y9PfLnxlbe00i1OELZNj');
-const { reset } = require("nodemon");
 require("dotenv").config();
+const stripe  = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const { reset } = require("nodemon");
+
 
 const port = process.env.PORT || 5000;
 
@@ -43,6 +44,7 @@ async function run() {
     const servicesCollection = client.db("bicycl_plus").collection("services");
     const ordersCollection = client.db("bicycl_plus").collection("orders");
     const usersCollection = client.db("bicycl_plus").collection("user");
+    const paymentCollection = client.db("bicycl_plus").collection("payment");
 
     app.get("/services", async (req, res) => {
       const query = {};
@@ -120,6 +122,21 @@ async function run() {
       const users = await usersCollection.find().toArray();
       res.send(users);
     });
+    app.patch('/orders/:id', verifyJWT,async(req,res)=>{
+      const id = req.params.id;
+      const payment=req.body;
+      const filter={_id: ObjectId(id)};
+      const updateDoc={
+        $set:{
+          paid: true,
+          transactionId: payment.transactionId,
+        }
+      }
+
+      const updatedOrders= await ordersCollection.updateOne(filter,updateDoc);
+      const result= await paymentCollection.insertOne(payment);
+      res.send(updateDoc); 
+    })
     app.delete('/user/:email', verifyJWT, async(req,res)=>{
       const email = req.params.email;
       console.log(email);
