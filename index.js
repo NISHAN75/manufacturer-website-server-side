@@ -47,6 +47,7 @@ async function run() {
     const paymentCollection = client.db("bicycl_plus").collection("payment");
     const reviewsCollection = client.db("bicycl_plus").collection("reviews");
     const profileCollection = client.db("bicycl_plus").collection("profile");
+  
 
     app.get("/services", async (req, res) => {
       const query = {};
@@ -92,6 +93,12 @@ async function run() {
         return res.status(403).send({ message: "Forbidden access" });
       }
     });
+    app.get("/allOrders", verifyJWT, async (req, res) => {
+      const query = {};
+      const cursor = ordersCollection.find(query);
+      const orders = await cursor.toArray();
+      res.send(orders);
+    });
     app.get('/orders/:id', verifyJWT, async(req,res)=>{
       const id = req.params.id;
       const query= {_id: ObjectId(id)};
@@ -118,6 +125,18 @@ async function run() {
       console.log(email);
       const filter= {userEmail:email};
       const result = await ordersCollection.deleteOne(filter);
+      res.send(result)
+    });
+    app.delete('/allOrders/:id',verifyJWT, async(req,res)=>{
+      const id = req.params.id;
+      const filter={_id: ObjectId(id)};
+      const result = await ordersCollection.deleteOne(filter);
+      res.send(result)
+    });
+    app.delete('/services/:id',verifyJWT, async(req,res)=>{
+      const id = req.params.id;
+      const filter={_id: ObjectId(id)};
+      const result = await servicesCollection.deleteOne(filter);
       res.send(result)
     });
 
@@ -206,10 +225,15 @@ async function run() {
       const cursor = reviewsCollection.find(query);
       const reviews = await cursor.toArray();
       res.send(reviews);
-    })
+    });
     app.post("/reviews", async (req, res) => {
       const reviews = req.body;
       const result = await reviewsCollection.insertOne(reviews);
+      res.send(result);
+    });
+    app.post("/services", async (req, res) => {
+      const services = req.body;
+      const result = await servicesCollection.insertOne(services);
       res.send(result);
     });
     app.post('/profile', async(req,res)=>{
